@@ -80,7 +80,7 @@
 			<string>
 /* 
 
-Data Cleaning and Manipulation in SQL:
+Data Cleaning,Manipulation and Exploratory Analysis in SQL:
 
 	In this project, the .csv file was imported into MySQL where I performed data cleaning and manipulation of the raw wine data. 
 	  I was interested in querying wine scores, prices and reviews from major wine-producing countries (>1000 wines reviewed) and 
@@ -375,7 +375,7 @@ SELECT country,
 	points,
 	price,
 	CASE 
-	  WHEN price &lt;= 4 THEN 'Extreme Value'
+	  WHEN price <= 4 THEN 'Extreme Value'
 	  WHEN price BETWEEN 4 AND 10 THEN 'Value'
 	  WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
 	  WHEN price BETWEEN 15 AND 20 THEN 'Premium'
@@ -383,7 +383,7 @@ SELECT country,
 	  WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
 	  WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
 	  WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
-	  WHEN price &gt;= 200 THEN 'Icon'
+	  WHEN price >= 200 THEN 'Icon'
 	  ELSE 0 
 	END AS price_segment
 	    
