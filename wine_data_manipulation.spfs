@@ -82,12 +82,12 @@
 Data Cleaning and Manipulation in SQL
 
 Skills used: CTEs, Window Functions, CREATE TABLE, Aggregations (COUNT, MAX, MIN, AVG), Rankings, Top 5 per category
-				Converting column datatypes from VARCHAR to INT, CASE statement for 
+				Converting column datatypes from VARCHAR to INT, CASE statement 
 
 */ 
 
 
---------- 1. Data Cleaning -&gt; converting data types
+--------- 1. Data Cleaning => converting data types
 
 -- Cast 'price' column from VARCHAR to INT. Needed to delete all the rows with missing price data, as I was unable to convert the price column from VARCHAR to INT otherwise.
 
@@ -100,7 +100,7 @@ ALTER TABLE Wine
 MODIFY column price INT
 
 	
---------- 2. Data Manipulation -&gt; Query the countries and grape varietals we are most interested in. Select countries with more reviews for more powerful analysis 
+--------- 2. Data Manipulation => Query the countries and grape varietals we are most interested in. Select countries with more reviews for more powerful analysis 
 
 
 -- Limit analysis to countries 'Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
@@ -126,8 +126,8 @@ ORDER BY AVGPoints DESC, AVGPrice ASC
 
 
 
---------- 3. Exploratory Data Analysis-&gt; We are interested to explore:
-				-- a. What are the top 5 scored varietal wines per country
+--------- 3. Exploratory Data Analysis => We are interested to explore:
+				   -- a. What are the top 5 scored varietal wines per country
 				   -- b. What are the top 5 highest ranking wines (regardless of grape varietal) per country
 				   -- c. standard deviation and variance of these data
 				   -- d. Ranking of all wines per winery based on score
@@ -153,7 +153,7 @@ WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinf
 )
 SELECT * 
 FROM top_5_per_varietal
-WHERE rnk &lt;=5 
+WHERE rnk <=5 
 
 -- List the top 5 highest ranking wines overall for each country. If there are ties in score, then secondary order by price (lower price results in higher rank)
 
@@ -175,7 +175,7 @@ WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinf
 )
 SELECT * 
 FROM top_5_per_country
-WHERE rnk&lt;=5 
+WHERE rnk <=5 
 
 
 
@@ -336,7 +336,7 @@ SELECT *,
 	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
 	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
 	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
-	    WHEN price &gt;= 200 THEN 'Icon'
+	    WHEN price >= 200 THEN 'Icon'
 	    ELSE 0 
 	    END AS price_segment
 FROM word_cloud 
@@ -349,20 +349,20 @@ ORDER BY variety, country, price_segment
 
 CREATE TABLE wine_price_segments
 SELECT country, 
-	    ROUND(AVG(points),2) AS avg_points_per_bottle, 
-	    ROUND(AVG(price),2) AS avg_price_per_bottle,
-	   CASE 
-	    WHEN price &lt;= 4 THEN 'Extreme Value'
-	    WHEN price BETWEEN 4 AND 10 THEN 'Value'
-	    WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
-	    WHEN price BETWEEN 15 AND 20 THEN 'Premium'
-	    WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
-	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
-	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
-	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
-	    WHEN price &gt;= 200 THEN 'Icon'
-	    ELSE 0 
-	    END AS price_segment
+       ROUND(AVG(points),2) AS avg_points_per_bottle, 
+       ROUND(AVG(price),2) AS avg_price_per_bottle,
+       CASE 
+	WHEN price <= 4 THEN 'Extreme Value'
+	WHEN price BETWEEN 4 AND 10 THEN 'Value'
+	WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
+	WHEN price BETWEEN 15 AND 20 THEN 'Premium'
+	WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
+	WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
+	WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
+	WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
+	WHEN price >= 200 THEN 'Icon'
+	ELSE 0 
+      END AS price_segment
 FROM wine_ranks_per_varietal
 GROUP BY price_segment, country
 ORDER BY country, avg_price_per_bottle DESC
@@ -376,20 +376,20 @@ ORDER BY country, avg_price_per_bottle DESC
 CREATE TABLE segment_counts
 WITH segments AS (
 SELECT country,
-	    points,
-	    price,
-	   CASE 
-	    WHEN price &lt;= 4 THEN 'Extreme Value'
-	    WHEN price BETWEEN 4 AND 10 THEN 'Value'
-	    WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
-	    WHEN price BETWEEN 15 AND 20 THEN 'Premium'
-	    WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
-	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
-	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
-	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
-	    WHEN price &gt;= 200 THEN 'Icon'
-	    ELSE 0 
-	    END AS price_segment
+	points,
+	price,
+	CASE 
+	  WHEN price &lt;= 4 THEN 'Extreme Value'
+	  WHEN price BETWEEN 4 AND 10 THEN 'Value'
+	  WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
+	  WHEN price BETWEEN 15 AND 20 THEN 'Premium'
+	  WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
+	  WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
+	  WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
+	  WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
+	  WHEN price &gt;= 200 THEN 'Icon'
+	  ELSE 0 
+	END AS price_segment
 	    
 FROM wine_ranks_per_varietal
 ORDER BY country 
