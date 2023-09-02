@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>ContentFilters</key>
+	<dict/>
+	<key>auto_connect</key>
+	<true/>
+	<key>data</key>
+	<dict>
+		<key>connection</key>
+		<dict>
+			<key>allowDataLocalInfile</key>
+			<integer>0</integer>
+			<key>database</key>
+			<string>Wine</string>
+			<key>enableClearTextPlugin</key>
+			<integer>0</integer>
+			<key>host</key>
+			<string>localhost</string>
+			<key>name</key>
+			<string>root@localhost</string>
+			<key>rdbms_type</key>
+			<string>mysql</string>
+			<key>sslCACertFileLocation</key>
+			<string></string>
+			<key>sslCACertFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslCertificateFileLocation</key>
+			<string></string>
+			<key>sslCertificateFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>sslKeyFileLocation</key>
+			<string></string>
+			<key>sslKeyFileLocationEnabled</key>
+			<integer>0</integer>
+			<key>type</key>
+			<string>SPTCPIPConnection</string>
+			<key>useSSL</key>
+			<integer>0</integer>
+			<key>user</key>
+			<string>root</string>
+		</dict>
+		<key>session</key>
+		<dict>
+			<key>connectionEncoding</key>
+			<string>utf8mb4</string>
+			<key>contentFilterV2</key>
+			<dict>
+				<key>children</key>
+				<array/>
+				<key>filterClass</key>
+				<string>groupNode</string>
+				<key>isConjunction</key>
+				<true/>
+			</dict>
+			<key>contentPageNumber</key>
+			<integer>1</integer>
+			<key>contentSelection</key>
+			<data>
+			YnBsaXN0MDDUAQIDBAUGBwpYJHZlcnNpb25ZJGFyY2hpdmVyVCR0
+			b3BYJG9iamVjdHMSAAGGoF8QD05TS2V5ZWRBcmNoaXZlctEICVRk
+			YXRhgAGoCwwXGBkaHiVVJG51bGzTDQ4PEBMWV05TLmtleXNaTlMu
+			b2JqZWN0c1YkY2xhc3OiERKAAoADohQVgASABYAHVHR5cGVUcm93
+			c18QHVNlbGVjdGlvbkRldGFpbFR5cGVOU0luZGV4U2V00hsPHB1c
+			TlNSYW5nZUNvdW50EACABtIfICEiWiRjbGFzc25hbWVYJGNsYXNz
+			ZXNaTlNJbmRleFNldKIjJFpOU0luZGV4U2V0WE5TT2JqZWN00h8g
+			JidcTlNEaWN0aW9uYXJ5oiYkAAgAEQAaACQAKQAyADcASQBMAFEA
+			UwBcAGIAaQBxAHwAgwCGAIgAigCNAI8AkQCTAJgAnQC9AMIAzwDR
+			ANMA2ADjAOwA9wD6AQUBDgETASAAAAAAAAACAQAAAAAAAAAoAAAA
+			AAAAAAAAAAAAAAABIw==
+			</data>
+			<key>contentSortColIsAsc</key>
+			<true/>
+			<key>contentViewport</key>
+			<string>{{0, 0}, {1231, 765}}</string>
+			<key>isToolbarVisible</key>
+			<true/>
+			<key>queries</key>
+			<string>/* 
+
+Data Cleaning and Manipulation in SQL
+
+Skills used: CTEs, Window Functions, CREATE TABLE, Aggregations (COUNT, MAX, MIN, AVG), Rankings, Top 5 per category
+				Converting column datatypes from VARCHAR to INT, CASE statement for 
+
+*/ 
+
+
+--------- 1. Data Cleaning -&gt; converting data types
+
+-- Cast 'price' column from VARCHAR to INT. Needed to delete all the rows with missing price data, as I was unable to convert the price column from VARCHAR to INT otherwise.
+
+DELETE FROM Wine 
+WHERE price='NULL'
+
+
+
+ALTER TABLE Wine
+MODIFY column price INT
+
+	
+--------- 2. Data Manipulation -&gt; Query the countries and grape varietals we are most interested in. Select countries with more reviews for more powerful analysis 
+
+
+-- Limit analysis to countries 'Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+-- Focus the analysis on the following varietals: Chardonnay, Sauvignon Blanc, Cabernet Sauvignon, Pinot Noir, Syrah, Tempranillo, Merlot, Riesling, Grenache. Which varietal earns the highest points on average? For wines that are scored the same, list in order of average price.  
+
+
+WITH pop_wine AS (
+SELECT variety, 
+       ROUND(AVG(points),2) AS AvgPoints, 
+       ROUND(AVG(price),2) AS AvgPrice, 
+       COUNT(variety) AS 'Number of Wines Reviewed'
+FROM Wine
+WHERE country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US') AND
+ 	  variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo')
+GROUP By variety
+ORDER BY variety ASC 
+)
+SELECT *
+FROM pop_wine 
+ORDER BY AVGPoints DESC, AVGPrice ASC
+
+
+
+
+
+--------- 3. Exploratory Data Analysis-&gt; We are interested to explore:
+				-- a. What are the top 5 scored varietal wines per country
+				   -- b. What are the top 5 highest ranking wines (regardless of grape varietal) per country
+				   -- c. standard deviation and variance of these data
+				   -- d. Ranking of all wines per winery based on score
+				   -- e. Table variables of these queries will be made so we can export data into Python to visualize score/price correlation
+
+-- For each of the selected varietals, list the top 5 varietal wines based on score for Argentina, Australia, France, Germany, Italy, Portugal, Spain, US
+-- create a table variable 
+
+CREATE TABLE top_5_varietals_per_country AS
+WITH top_5_per_varietal AS (
+SELECT country,  
+	   province, 
+	    region_1, 
+	    variety, 
+	    winery, 
+	    title, 
+	    price,
+	    points,
+	    RANK() OVER (PARTITION BY country,variety ORDER BY points DESC, price ASC) AS rnk
+FROM Wine
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+)
+SELECT * 
+FROM top_5_per_varietal
+WHERE rnk &lt;=5 
+
+-- List the top 5 highest ranking wines overall for each country. If there are ties in score, then secondary order by price (lower price results in higher rank)
+
+CREATE TABLE top_5_wines_per_country
+WITH top_5_per_country AS (
+SELECT country,  
+	   province, 
+	    region_1, 
+	    variety, 
+	    winery, 
+	    title, 
+	    price,
+	    points,
+	    RANK() OVER (PARTITION BY country ORDER BY points DESC, price ASC) AS rnk
+FROM Wine
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+
+)
+SELECT * 
+FROM top_5_per_country
+WHERE rnk&lt;=5 
+
+
+
+
+
+
+ 
+-- Avg points and price of provinces around the world (&gt;=1000 reviews)
+
+SELECT province, 
+	   country, 
+	    ROUND(AVG(points),2) AS AvgPoints, ROUND(AVG(price), 2) AS AvgPrice, 
+	    COUNT(points) AS NumberOfReviews
+FROM Wine
+GROUP BY province, country
+HAVING COUNT(points)&gt;=1000
+ORDER BY AVG(points) DESC, AVG(price) DESC
+
+
+
+
+
+-- Standard Deviation and Variance of Points and Price (as CTE)
+
+WITH avg_ratings AS(
+SELECT province, 
+	   country, 
+	    AVG(points) AS points, 
+	    ROUND(AVG(price)) AS AvgPrice, 
+	    COUNT(points) AS NumberOfReviews
+FROM Wine
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+GROUP BY province, country
+HAVING COUNT(points)&gt;=1000
+ORDER BY AVG(points) DESC, AVG(price) DESC
+)
+SELECT VARIANCE(points), 
+       STDDEV(points), 
+       VARIANCE(AvgPrice), 
+       STDDEV(AvgPrice)
+FROM avg_ratings
+
+     
+-- Variance, Stddev of points and price (as subquery)
+
+SELECT ROUND(VARIANCE(points),2), ROUND(STDDEV(points),2), ROUND(VARIANCE(AvgPrice),2), ROUND(STDDEV(AvgPrice),2)
+FROM
+	(SELECT province, country, ROUND(AVG(points),2) AS points, ROUND(AVG(price),2) AS AvgPrice, COUNT(points) AS NumberOfReviews
+		FROM Wine
+		GROUP BY province, country
+		HAVING COUNT(points)&amp;amp;amp;gt; 1000
+		ORDER BY AVG(points) DESC, AVG(price) DESC) AS variance_table
+		
+
+
+-- For each winery, list their highest scored wines in rank. If there are ties, secondary order them by price descending. 
+-- Create table variable wine_ranks_per_winery
+
+CREATE TABLE wine_ranks_per_winery
+WITH wineries AS (
+	SELECT 
+	   country,
+	    province,
+	    region_1,
+	   winery, 
+	 	title, 
+	 	variety, 
+	 	points, 
+	 	price,
+	 	RANK() OVER(PARTITION BY winery ORDER BY points DESC, price ASC) AS wine_rank
+	FROM Wine
+	WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						'Sauvignon Blanc','Tempranillo') AND
+	      country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+	ORDER BY points desc
+				 )
+ SELECT 
+	country,
+	 province,
+	region_1,
+	winery, 
+	title, 
+	variety, 
+	points, 
+	price,
+	RANK() OVER(PARTITION BY winery ORDER BY points DESC, price ASC) AS wine_rank
+  FROM wineries
+  
+
+
+
+-- Rank wine scores for each popular varietal. In the case of multiple wines with the same score, secondary order by price (the least expensive listed first)
+
+CREATE TABLE wine_ranks_per_varietal
+WITH bottles AS (
+	SELECT 
+	   country,
+	    province,
+	   region_1,
+	   winery, 
+	   title, 
+	   variety, 
+	    points, 
+	 	price,
+	 	RANK() OVER(PARTITION BY variety ORDER BY points DESC, price ASC) AS varietal_rank
+	FROM Wine
+	WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 'Sauvignon Blanc','Tempranillo') AND
+	  	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
+	ORDER BY points desc
+				 )
+ SELECT 
+	country,
+	 province,
+	region_1,
+	winery, 
+	title, 
+	variety, 
+	points, 
+	price,
+	RANK() OVER(PARTITION BY variety ORDER BY points DESC, price ASC) AS varietal_rank
+  FROM bottles
+
+
+
+-- Query the avg score/bottle and avg price/bottle for each wine segment (outlined below)
+/*           
+
+	Wine Segments
+	 Extreme Value wines &lt;= $4, Value wines = $4-10, Popular Premium= 10-15$, Premium= $15-20, Super Premium= $-30, Ultra-Premium= $30-50
+	 Luxury= $50-100, Super Luxury= $100-200 , Icon= $200+
+	 
+*/
+
+
+-- Query all the wine reviews for the selected countries and variety, include the price_segment. This will be used for a Wordcloud analysis in Python.
+
+CREATE VIEW word_cloud AS 
+WITH word_cloud AS (
+SELECT country,
+	   variety, 
+	   title,
+	    winery,
+	    description,
+	    points,
+	    price
+FROM Wine
+WHERE country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US') AND
+ 	  variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo')
+ORDER BY variety ASC 
+)
+SELECT *,
+	   CASE 
+	    WHEN price &lt;= 4 THEN 'Extreme Value'
+	    WHEN price BETWEEN 4 AND 10 THEN 'Value'
+	    WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
+	    WHEN price BETWEEN 15 AND 20 THEN 'Premium'
+	    WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
+	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
+	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
+	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
+	    WHEN price &gt;= 200 THEN 'Icon'
+	    ELSE 0 
+	    END AS price_segment
+FROM word_cloud 
+ORDER BY variety, country, price_segment
+
+
+
+
+-- For each country, list the avg points and avg price for all price-segments
+
+CREATE TABLE wine_price_segments
+SELECT country, 
+	    ROUND(AVG(points),2) AS avg_points_per_bottle, 
+	    ROUND(AVG(price),2) AS avg_price_per_bottle,
+	   CASE 
+	    WHEN price &lt;= 4 THEN 'Extreme Value'
+	    WHEN price BETWEEN 4 AND 10 THEN 'Value'
+	    WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
+	    WHEN price BETWEEN 15 AND 20 THEN 'Premium'
+	    WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
+	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
+	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
+	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
+	    WHEN price &gt;= 200 THEN 'Icon'
+	    ELSE 0 
+	    END AS price_segment
+FROM wine_ranks_per_varietal
+GROUP BY price_segment, country
+ORDER BY country, avg_price_per_bottle DESC
+	
+
+
+
+-- Count the number of wines in each price segment, for each country
+-- Create table variable; this table will be joined to wine_price_segments 
+
+CREATE TABLE segment_counts
+WITH segments AS (
+SELECT country,
+	    points,
+	    price,
+	   CASE 
+	    WHEN price &lt;= 4 THEN 'Extreme Value'
+	    WHEN price BETWEEN 4 AND 10 THEN 'Value'
+	    WHEN price BETWEEN 10 AND 15 THEN 'Popular Premium'
+	    WHEN price BETWEEN 15 AND 20 THEN 'Premium'
+	    WHEN price BETWEEN 20 AND 30 THEN 'Super Premium'
+	    WHEN price BETWEEN 30 AND 50 THEN 'Ultra Premium'
+	    WHEN price BETWEEN 50 AND 100 THEN 'Luxury'
+	    WHEN price BETWEEN 100 AND 200 THEN 'Super Luxury'
+	    WHEN price &gt;= 200 THEN 'Icon'
+	    ELSE 0 
+	    END AS price_segment
+	    
+FROM wine_ranks_per_varietal
+ORDER BY country 
+)
+SELECT country,
+	   COUNT(IF(price_segment='Extreme Value', 1, null)) AS count_extreme_value, 
+	   COUNT(IF(price_segment='Value', 1, null)) AS count_value,
+	   COUNT(IF(price_segment='Popular Premium', 1, null)) AS count_popular_premium,
+	   COUNT(IF(price_segment='Premium', 1, null)) AS count_premium,
+	    COUNT(IF(price_segment='Super Premium', 1, null)) AS count_super_premium,
+	    COUNT(IF(price_segment='Ultra Premium', 1, null)) AS count_ultra_premium,
+	    COUNT(IF(price_segment='Luxury', 1, null)) AS count_luxury,
+	    COUNT(IF(price_segment='Super Luxury', 1, null)) AS count_super_luxury,
+	    COUNT(IF(price_segment='Icon', 1, null)) AS count_icon
+FROM segments
+GROUP BY country
+	
+
+-- JOIN segment_count on wine_price_segments 
+-- create VIEW 
+
+CREATE VIEW price_segment_countries AS
+SELECT wps.country, 
+	   wps.price_segment,
+	     CASE 
+	    WHEN price_segment= 'Icon' THEN sc.count_icon
+	    WHEN price_segment= 'Super Luxury' THEN sc.count_super_luxury
+	    WHEN price_segment= 'Luxury' THEN sc.count_luxury
+	    WHEN price_segment= 'Ultra Premium' THEN sc.count_ultra_premium
+	    WHEN price_segment= 'Super Premium' THEN sc.count_super_premium
+	    WHEN price_segment= 'Premium' THEN sc.count_premium
+	    WHEN price_segment= 'Popular Premium' THEN sc.count_popular_premium
+	    WHEN price_segment= 'Value' THEN sc.count_value
+	    WHEN price_segment= 'Extreme Value' THEN sc.count_extreme_value
+	    ELSE 0
+	    END AS number_wines_in_price_segment,
+	    ROUND(AVG(avg_points_per_bottle)OVER(PARTITION BY price_segment,country),2) AS avg_points, 		 ROUND(AVG(avg_price_per_bottle)OVER(PARTITION BY price_segment,country),2) AS avg_price
+FROM wine_price_segments wps
+LEFT JOIN segment_counts sc ON sc.country=wps.country
+ORDER BY avg_price DESC
+	
+
+
+
+
+-- Export this query to Pandas for visualization and further exploration
+
+
+
+</string>
+			<key>table</key>
+			<string>Wine</string>
+			<key>view</key>
+			<string>SP_VIEW_CUSTOMQUERY</string>
+			<key>windowVerticalDividerPosition</key>
+			<real>208</real>
+		</dict>
+	</dict>
+	<key>encrypted</key>
+	<false/>
+	<key>format</key>
+	<string>connection</string>
+	<key>queryFavorites</key>
+	<array/>
+	<key>rdbms_type</key>
+	<string>mysql</string>
+	<key>rdbms_version</key>
+	<string>8.0.33</string>
+	<key>version</key>
+	<integer>1</integer>
+</dict>
+</plist>
