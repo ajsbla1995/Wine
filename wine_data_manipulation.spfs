@@ -77,14 +77,22 @@
 			<key>isToolbarVisible</key>
 			<true/>
 			<key>queries</key>
-			<string>/* 
+			<string>
+/* 
 
-Data Cleaning and Manipulation in SQL
+Data Cleaning and Manipulation in SQL:
 
-Skills used: CTEs, Window Functions, CREATE TABLE, Aggregations (COUNT, MAX, MIN, AVG), Rankings, Top 5 per category
-				Converting column datatypes from VARCHAR to INT, CASE statement 
+	In this project, the .csv file was imported into MySQL where I performed data cleaning and manipulation of the raw wine data. 
+	  I was interested in querying wine scores, prices and reviews from major wine-producing countries (>1000 wines reviewed) and 
+	  major varietals. This code aggregates, manipulates and explores these data; further analysis and visualization will then be 
+          completed in Python and Tableau.
+	 
+	Skills used: CTEs, Window Functions, CREATE TABLE, Aggregations (COUNT, MAX, MIN, AVG), Rankings, Top 5 per category,
+	               Converting column datatypes from VARCHAR to INT, CASE statement, JOIN statements, ALTER table to MODIFY column,
+		        DELETE NULL values, CREATE table variables and VIEWS
+				
 
-*/ 
+*/
 
 
 --------- 1. Data Cleaning => converting data types
@@ -114,7 +122,7 @@ SELECT variety,
        COUNT(variety) AS 'Number of Wines Reviewed'
 FROM Wine
 WHERE country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US') AND
- 	  variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo')
+ 	  variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot','Sauvignon Blanc','Tempranillo')
 GROUP By variety
 ORDER BY variety ASC 
 )
@@ -148,7 +156,7 @@ SELECT country,
 	    points,
 	    RANK() OVER (PARTITION BY country,variety ORDER BY points DESC, price ASC) AS rnk
 FROM Wine
-WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot','Sauvignon Blanc','Tempranillo') AND
 	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
 )
 SELECT * 
@@ -169,7 +177,7 @@ SELECT country,
 	    points,
 	    RANK() OVER (PARTITION BY country ORDER BY points DESC, price ASC) AS rnk
 FROM Wine
-WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot','Sauvignon Blanc','Tempranillo') AND
 	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
 
 )
@@ -183,7 +191,7 @@ WHERE rnk <=5
 
 
  
--- Avg points and price of provinces around the world (&gt;=1000 reviews)
+-- Avg points and price of provinces around the world (>=1000 reviews)
 
 SELECT province, 
 	   country, 
@@ -191,7 +199,7 @@ SELECT province,
 	    COUNT(points) AS NumberOfReviews
 FROM Wine
 GROUP BY province, country
-HAVING COUNT(points)&gt;=1000
+HAVING COUNT(points)>=1000
 ORDER BY AVG(points) DESC, AVG(price) DESC
 
 
@@ -207,12 +215,12 @@ SELECT province,
 	    ROUND(AVG(price)) AS AvgPrice, 
 	    COUNT(points) AS NumberOfReviews
 FROM Wine
-WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						   'Sauvignon Blanc','Tempranillo') AND
+WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot','Sauvignon Blanc','Tempranillo') AND
 	  country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
 GROUP BY province, country
-HAVING COUNT(points)&gt;=1000
+HAVING COUNT(points)>=1000
 ORDER BY AVG(points) DESC, AVG(price) DESC
-)
+                    )
 SELECT VARIANCE(points), 
        STDDEV(points), 
        VARIANCE(AvgPrice), 
@@ -220,17 +228,6 @@ SELECT VARIANCE(points),
 FROM avg_ratings
 
      
--- Variance, Stddev of points and price (as subquery)
-
-SELECT ROUND(VARIANCE(points),2), ROUND(STDDEV(points),2), ROUND(VARIANCE(AvgPrice),2), ROUND(STDDEV(AvgPrice),2)
-FROM
-	(SELECT province, country, ROUND(AVG(points),2) AS points, ROUND(AVG(price),2) AS AvgPrice, COUNT(points) AS NumberOfReviews
-		FROM Wine
-		GROUP BY province, country
-		HAVING COUNT(points)&amp;amp;amp;gt; 1000
-		ORDER BY AVG(points) DESC, AVG(price) DESC) AS variance_table
-		
-
 
 -- For each winery, list their highest scored wines in rank. If there are ties, secondary order them by price descending. 
 -- Create table variable wine_ranks_per_winery
@@ -248,10 +245,10 @@ WITH wineries AS (
 	 	price,
 	 	RANK() OVER(PARTITION BY winery ORDER BY points DESC, price ASC) AS wine_rank
 	FROM Wine
-	WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 						'Sauvignon Blanc','Tempranillo') AND
+	WHERE variety IN ('Cabernet Sauvignon', 'Syrah', 'Grenache', 'Pinot Noir', 'Zinfandel', 'Malbec', 'Riesling', 'Chardonnay', 'Merlot', 'Sauvignon Blanc','Tempranillo') AND
 	      country IN ('Argentina', 'Australia', 'France', 'Germany', 'Italy', 'Portugal', 'Spain', 'US')
 	ORDER BY points desc
-				 )
+	         )
  SELECT 
 	country,
 	 province,
@@ -304,7 +301,7 @@ WITH bottles AS (
 /*           
 
 	Wine Segments
-	 Extreme Value wines &lt;= $4, Value wines = $4-10, Popular Premium= 10-15$, Premium= $15-20, Super Premium= $-30, Ultra-Premium= $30-50
+	 Extreme Value wines <= $4, Value wines = $4-10, Popular Premium= 10-15$, Premium= $15-20, Super Premium= $-30, Ultra-Premium= $30-50
 	 Luxury= $50-100, Super Luxury= $100-200 , Icon= $200+
 	 
 */
@@ -367,7 +364,6 @@ FROM wine_ranks_per_varietal
 GROUP BY price_segment, country
 ORDER BY country, avg_price_per_bottle DESC
 	
-
 
 
 -- Count the number of wines in each price segment, for each country
